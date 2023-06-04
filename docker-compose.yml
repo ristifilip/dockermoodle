@@ -1,33 +1,35 @@
-                                                                                          
 version: '2'
 services:
   mariadb:
     image: mariadb
     volumes:
       - /srv/Configs/Databases/Moodle:/var/lib/mysql
-      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
     environment:
-      - MYSQL_ROOT_PASSWORD=moodle
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
       - MYSQL_ROOT_USER=root
       - MYSQL_DATABASE=moodle
+    secrets:
+      - mysql_root_password
 
   moodle:
     image: bitnami/moodle:latest
     ports:
       - 80:8080
-      - 8443:8443
     environment:
       - MOODLE_DATABASE_HOST=mariadb
       - MOODLE_DATABASE_USER=root
-      - MOODLE_DATABASE_PASSWORD=moodle
+      - MOODLE_DATABASE_PASSWORD_FILE=/run/secrets/moodle_db_password
       - MOODLE_DATABASE_NAME=moodle
       - PUID=0
       - PGID=100
     volumes:
       - /srv/Configs/Moodle:/bitnami/moodle
       - /srv/Configs/MoodleData:/bitnami/moodledata
-    depends_on:
-      - mariadb
-    links:
-      - mariadb:mariadb
+    secrets:
+      - moodle_db_password
 
+secrets:
+  mysql_root_password:
+    file: ../mysql_root_password.txt
+  moodle_db_password:
+    file: ../moodle_db_password.txt
